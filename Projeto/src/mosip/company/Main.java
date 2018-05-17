@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.TreeMap;
 
+import static java.lang.Math.round;
+
 public class Main {
 
 
@@ -17,10 +19,13 @@ public class Main {
 
     static float relogio;
 
+    //Estatistica
     static float numeroAtrasos;
     static float atrasoTotal;
-    static float área_num_in_q;
-    static float area_server_status;
+    static float área_num_in_q; // Tamanho da fila de espera
+    static float area_server_status; // Taxa utilização do servidor
+
+
     static float time_since_last_event;
     static float time_last_event;
 
@@ -54,6 +59,8 @@ public class Main {
     private static void estatistica() {
         time_since_last_event = relogio - time_last_event;
         time_last_event = relogio;
+
+
         área_num_in_q += clienteEmEspera()*time_since_last_event;
 
         float status = 0;
@@ -132,9 +139,11 @@ public class Main {
             barbeiro.setEstado(Barbeiro.state.LIVRE);
             System.out.println ("\n Barbeiro ficou livre! \n");
         } else {
-            fila_espera.remove(fila_espera.get(0));
+            Evento eventoCliente = fila_espera.get ( 0 );
+            fila_espera.remove ( eventoCliente );
             System.out.println ("Cliente removido da fila de espera.");
             numeroAtrasos++;
+            atrasoTotal += relogio - eventoCliente.getCliente ().getHoraDeChegada () ;
             geraEventoFimDeAtendimento(evento.getCliente());
             System.out.println ("\n Babeiro está a atender o próximo da fila de espera. \n");
         }
@@ -157,7 +166,6 @@ public class Main {
             barbeiro.setEstado ( Barbeiro.state.OCUPADO );
             System.out.println ("\n Barbeiro ficou ocupado! \n" );
             numeroAtrasos++;
-            atrasoTotal += 0 ;
             geraEventoFimDeAtendimento(chegada.getCliente());
         }
 
@@ -165,14 +173,17 @@ public class Main {
     }
 
     private static void imprimeRelatorios() {
-
+        System.out.println ("\n\n ####################################### \n ");
         System.out.println("Relogio : "+relogio);
+        System.out.println("Clientes na fila de espera: " + clienteEmEspera ());
+        System.out.println("Atraso total : "+numeroAtrasos);
+
+        System.out.println ("\n ####################################### \n ");
         System.out.println("Average_delay_queue : "+(atrasoTotal/numeroAtrasos));
-        System.out.println("Average_num_in_queue : "+(área_num_in_q/relogio));
-        System.out.println("Atraso total : "+atrasoTotal);
-        System.out.println("Area da taxa de utilização fila de espera: "+área_num_in_q);
-        System.out.println("Area da taxa de utilização do servidor: "+area_server_status);
-        System.out.println("Clientes na fila de espera: " + fila_espera.size());
+        System.out.println("Average_num_in_queue : "+round(área_num_in_q/relogio));
+        System.out.println("Média de utilização do servidor: "+(area_server_status/relogio)*100);
+        System.out.println ("\n ####################################### \n \n");
+
     }
 
 
