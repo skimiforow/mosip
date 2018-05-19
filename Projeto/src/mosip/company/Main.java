@@ -100,7 +100,7 @@ public class Main {
         boolean exists = true;
         float fimDeCorte = 0.0f;
         while (exists) {
-            fimDeCorte = relogio + tempoDoServico();
+            fimDeCorte = relogio + tempoDoServico() + 0.01f;
             if (!eventList.containsKey ( fimDeCorte )) {
                 exists = false;
                 break;
@@ -209,14 +209,14 @@ public class Main {
 
     static private float tempoDoChegada(){
         Random rand = new Random();
-        rand.setSeed(123);
+        //rand.setSeed(50);
         return rand.nextInt(19) + 1;
     }
 
 
     static private float tempoDoServico(){
         Random rand = new Random();
-        rand.setSeed(123);
+        //rand.setSeed(50);
         return rand.nextInt(22) + 1;
     }
 
