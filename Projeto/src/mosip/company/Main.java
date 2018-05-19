@@ -9,25 +9,25 @@ import static java.lang.Math.round;
 public class Main {
 
 
-    static float FIM_DA_SIMULACAO = 480;
+    private static float FIM_DA_SIMULACAO = 480;
 
 
-    static Cliente cliente;
-    static ArrayList<Evento> fila_espera;
-    static TreeMap<Float,Evento> eventList;
-    static Barbeiro barbeiro;
+    private static Cliente cliente;
+    private static ArrayList<Evento> fila_espera;
+    private static TreeMap<Float, Evento> eventList;
+    private static Barbeiro barbeiro;
 
-    static float relogio;
+    private static float relogio;
 
     //Estatistica
-    static float numeroAtrasos;
-    static float atrasoTotal;
-    static float área_num_in_q; // Tamanho da fila de espera
-    static float area_server_status; // Taxa utilização do servidor
+    private static float numeroAtrasos;
+    private static float atrasoTotal;
+    private static float area_num_in_q; // Tamanho da fila de espera
+    private static float area_server_status; // Taxa utilização do servidor
 
 
-    static float time_since_last_event;
-    static float time_last_event;
+    private static float time_since_last_event;
+    private static float time_last_event;
 
 
     public static void main(String[] args) {
@@ -61,7 +61,7 @@ public class Main {
         time_last_event = relogio;
 
 
-        área_num_in_q += clienteEmEspera()*time_since_last_event;
+        area_num_in_q += clienteEmEspera() * time_since_last_event;
 
         float status = 0;
         if (barbeiro.getEstado()==Barbeiro.state.OCUPADO){
@@ -76,7 +76,7 @@ public class Main {
 
         boolean exists = true;
         float horaDaChegada = 0.0f;
-        while (exists == true) {
+        while (exists) {
             horaDaChegada = relogio + tempoDoChegada();
             if (!eventList.containsKey ( horaDaChegada )) {
                 exists = false;
@@ -99,7 +99,7 @@ public class Main {
         Evento corte = new Evento();
         boolean exists = true;
         float fimDeCorte = 0.0f;
-        while (exists == true) {
+        while (exists) {
             fimDeCorte = relogio + tempoDoServico();
             if (!eventList.containsKey ( fimDeCorte )) {
                 exists = false;
@@ -149,7 +149,7 @@ public class Main {
         }
     }
 
-    public static void eventoChegada(){
+    private static void eventoChegada() {
         //Nova chegada de cliente
         geraEventoDeChegada();
 
@@ -175,26 +175,32 @@ public class Main {
     private static void imprimeRelatorios() {
         System.out.println ("\n\n ####################################### \n ");
         System.out.println("Relogio : "+relogio);
-        System.out.println("Clientes na fila de espera: " + clienteEmEspera ());
-        System.out.println("Atraso total : "+numeroAtrasos);
+        System.out.println("Número de clientes na fila de espera que ficaram por atender : " + clienteEmEspera());
+        System.out.println("Número de clientes que estiveram na final de espera : " + numeroAtrasos);
 
         System.out.println ("\n ####################################### \n ");
-        System.out.println("Average_delay_queue : "+(atrasoTotal/numeroAtrasos));
-        System.out.println("Average_num_in_queue : "+round(área_num_in_q/relogio));
-        System.out.println("Média de utilização do servidor: "+(area_server_status/relogio)*100);
+        float mediaEspera = atrasoTotal / numeroAtrasos;
+        double roundedMediaEspera = Math.round(mediaEspera * 100.0) / 100.0;
+        System.out.println("Tempo médio de espera : " + roundedMediaEspera + " minutos");
+
+        System.out.println("Média de uso da fila de espera : " + round(area_num_in_q / relogio));
+
+        float mediaUtilizacaoServer = (area_server_status / relogio) * 100;
+        double roundedMediaUtilizacaoServer = Math.round(mediaUtilizacaoServer * 100.0) / 100.0;
+        System.out.println("Média de utilização do servidor: " + roundedMediaUtilizacaoServer + " %");
         System.out.println ("\n ####################################### \n \n");
 
     }
 
 
-    public static void inicializa() {
+    private static void inicializa() {
         fila_espera = new ArrayList<>(); // num_in_queue = 0
         eventList = new TreeMap<>(); // eventList
         relogio = 0; // Incializar relógio da simulação a 0
         time_since_last_event = 0; // // time_last_event = 0
         time_last_event = 0; // // time_last_event = 0
         atrasoTotal = 0; // total_delay = 0
-        área_num_in_q = 0; // Área de utilização da fila de espera
+        area_num_in_q = 0; // Área de utilização da fila de espera
         area_server_status = 0; // Área de utilização do servidor
 
         barbeiro = new Barbeiro(); //server_status = FREE
@@ -202,21 +208,19 @@ public class Main {
     }
 
     static private float tempoDoChegada(){
-        float tempo = 0;
         Random rand = new Random();
-        tempo = rand.nextInt(19) + 1;
-        return tempo;
+        rand.setSeed(123);
+        return rand.nextInt(19) + 1;
     }
 
 
     static private float tempoDoServico(){
-        float tempo = 0;
         Random rand = new Random();
-        tempo = rand.nextInt ( 22) + 1;
-        return tempo;
+        rand.setSeed(123);
+        return rand.nextInt(22) + 1;
     }
 
-    static int clienteEmEspera(){
+    static private int clienteEmEspera() {
         return fila_espera.size();
     }
 }
