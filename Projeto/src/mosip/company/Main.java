@@ -1,69 +1,71 @@
 package mosip.company;
 
-import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 
-import static java.lang.Math.round;
+import java.lang.Math.*;
 
 public class Main {
 
-
-
-
-    private static float clock;
+    private  float clock;
 
     //Lista de eventos
-    private static TreeMap<Float, Event> eventList;
+    private  TreeMap<Float, Event> eventList;
 
     //Servidores
-    private static Server warehouse;
-    private static Server purchasing;
+    private  Server warehouse;
+    private  Server purchasing;
 
     //Fila de espera do armazém e das compras
-    private static GenericQueue warehouseQueue;
-    private static GenericQueue purchasingQueue;
+    private GenericQueue warehouseQueue;
+    private GenericQueue purchasingQueue;
 
 
     //Estatistica
-    private static float numberOfDelays;
-    private static float timeSinceLastEvent;
-    private static float timeLastEvent;
-    private static float averageTimeToDeliverySinceOrder;
-    private static float timeToDeliverySinceOrder;
-    private static float numOfOrders;
+    private  float numberOfDelays;
+    private  float timeSinceLastEvent;
+    private  float timeLastEvent;
+    private  float averageTimeToDeliverySinceOrder;
+    private  float timeToDeliverySinceOrder;
+    private  float numOfOrders;
+    private  float numOfOrdersDelivered;
+    private int count_chegada;
+    private int count_compra;
+    private int count_stock;
+    private int count_transportadora;
 
     //Dados de alietoriedade
-    private final static float END_OF_SIMULATION = 2400;
+    private final  float END_OF_SIMULATION = 2400;
 
-    private static final int chegada_de = 1;
-    private static final int chegada_ate = 30;
+    private final int chegada_de = 1;
+    private final int chegada_ate = 30;
 
-    private static final int prep_envio_de = 10;
-    private static final int prep_envio_ate = 60;
+    private final int prep_envio_de = 10;
+    private final int prep_envio_ate = 60;
 
-    private static final int compra_de = 10;
-    private static final int compra_ate = 30;
+    private final int compra_de = 10;
+    private final int compra_ate = 30;
 
-    private static final int transportadora_de = 720;
-    private static final int transportadora_ate = 1240;
+    private final int transportadora_de = 720;
+    private final int transportadora_ate = 1240;
 
-    private static final int envio_para_cliente_de = 720;
-    private static final int envio_para_cliente_ate = 1240;
+    private final int envio_para_cliente_de = 720;
+    private final int envio_para_cliente_ate = 1240;
 
     public static void main(String[] args) {
-        initialization();
-        while (clock < END_OF_SIMULATION){
-            statisticsUpdate();
-            statistics();
-            routine();
+        Main m = new Main();
+        m.initialization();
+        while (m.clock < m.END_OF_SIMULATION){
+            m.statisticsUpdate();
+            m.statistics();
+            m.routine();
         }
-        imprimeRelatorios();    }
+        m.imprimeRelatorios();    }
 
-    private static void statisticsUpdate() {
+    private  void statisticsUpdate() {
         if (!eventList.isEmpty ()) {
             Event event = eventList.get(eventList.firstKey());
-            System.out.println ( "O próximo event a decorrer é do tipo: " + event.getTipo () );
+            System.out.println ( "O próximo evento a decorrer é do tipo: " + event.getTipo () );
             clock = event.getEventOccurrency();
             System.out.println ( "Relógio : " + clock + "\n --------------------------------------- \n \n");
         } else {
@@ -71,9 +73,11 @@ public class Main {
 
         }
     }
-    private static void statistics() {
+    private void statistics() {
         timeSinceLastEvent = clock - timeLastEvent;
         timeLastEvent = clock;
+        purchasingQueue.setTimeOfLastEvent(timeSinceLastEvent);
+        warehouseQueue.setTimeOfLastEvent(timeSinceLastEvent);
 
         purchasingQueue.updateStatistic();
         warehouseQueue.updateStatistic();
@@ -83,24 +87,27 @@ public class Main {
     }
 
 
-    private static void routine() {
-        Event event = eventList.remove(eventList.firstKey());
+    private void routine() {
         if(eventList.isEmpty ()){
             System.out.println("Gerei evento de chegada de encomenda porque a lista de eventos estava vazia");
             arrivalEvent(new Event());
         } else {
-            //eventList.remove(eventList.firstKey());
+            Event event = eventList.remove(eventList.firstKey());
             if (event.getTipo() == Event.state.CHEGADA){
                 System.out.println("Gerei evento de chegada de encomenda");
+                count_chegada++;
                 arrivalEvent(event);
             } else if (event.getTipo() == Event.state.PREP_ENVIO){
                 System.out.println("Gerei evento de stock para preparação de envio");
+                count_stock++;
                 orderPreparationEvent(event);
             } else if (event.getTipo() == Event.state.COMPRA){
                 System.out.println("Gerei evento de compra");
+                count_compra++;
                 orderPurchaseEvent(event);
             } else if (event.getTipo() == Event.state.TRANSPORTADORA){
                 System.out.println("Gerei evento de transporte de fornecedor");
+                count_transportadora++;
                 transportationFromSupplierEvent(event);
             } else if (event.getTipo() == Event.state.ENVIO_CLIENTE){
                 System.out.println("Gerei evento de Chegada");
@@ -115,11 +122,13 @@ public class Main {
      * @param to Para a fonte de alietoriedade, o fim
      * @param state Para que estado vai o Evento
      */
-    private static void eventGenerator(Event event,int from, int to, Event.state state) {
+    private void eventGenerator(Event event,int from, int to, Event.state state) {
         event.setState(state);
 
-        if(state == Event.state.CHEGADA)
+        if(state == Event.state.CHEGADA){
             event.getOrder().setState(Order.state.ORDERED_BY_CLIENT);
+            numOfOrders++;
+        }
         if(state == Event.state.PREP_ENVIO)
             event.getOrder().setState(Order.state.PREPARING_TO_SEND);
         if(state == Event.state.COMPRA)
@@ -146,47 +155,51 @@ public class Main {
         eventList.put(event.getOrder().getGlobalArrivalTime(),event);
     }
 
-    private static void orderPreparationEvent(Event event) {
+    private void orderPreparationEvent(Event event) {
         if (warehouseQueue.isEmpty()){
-            eventList.remove(event.getEventOccurrency(),event);
             warehouse.setState(Server.state.LIVRE);
+            eventGenerator(event,envio_para_cliente_de,envio_para_cliente_ate,Event.state.ENVIO_CLIENTE);
             System.out.println ("\n Armazém ficou livre! \n");
         } else {
             Event eventFromQueue = warehouseQueue.removeFromQueue();
             System.out.println ("Encomenda removido da fila de espera do armazém.");
             warehouse.addDelay();
             warehouse.setTotaldelay(warehouse.getTotaldelay()+(clock - eventFromQueue.getEventOccurrency()));
+            eventGenerator(event,prep_envio_de,prep_envio_ate,Event.state.PREP_ENVIO);
             eventGenerator(eventFromQueue,envio_para_cliente_de,envio_para_cliente_ate,Event.state.ENVIO_CLIENTE);
             System.out.println ("\n O Armazém está a preparar o próximo da fila de espera. \n");
         }
     }
 
-    private static void shipmentToClientEvent(Event event) {
-        eventList.remove(event.getEventOccurrency(),event);
-        timeToDeliverySinceOrder = (clock - event.getOrder().getArrivalTime());
-        numOfOrders++;
+    private  void shipmentToClientEvent(Event event) {
+        //eventList.remove(event.getEventOccurrency(),event);
+        timeToDeliverySinceOrder += (clock - event.getOrder().getArrivalTime());
+        numOfOrdersDelivered++;
     }
 
-    private static void orderPurchaseEvent(Event event) {
+    private  void orderPurchaseEvent(Event event) {
         if (purchasingQueue.isEmpty()){
-            eventList.remove(event.getEventOccurrency(),event);
             purchasing.setState(Server.state.LIVRE);
+            eventGenerator(event,transportadora_de,transportadora_ate,Event.state.TRANSPORTADORA);
             System.out.println ("\n Compras ficou livre! \n");
         } else {
             Event eventFromQueue = purchasingQueue.removeFromQueue();
             System.out.println ("Encomenda removido da fila de espera das compras.");
             purchasing.addDelay();
             purchasing.setTotaldelay(purchasing.getTotaldelay()+(clock - eventFromQueue.getEventOccurrency()));
+            eventGenerator(event,compra_de,compra_ate,Event.state.COMPRA);
             eventGenerator(eventFromQueue,transportadora_de,transportadora_ate,Event.state.TRANSPORTADORA);
             System.out.println ("\n As compras estão a comprar o próximo da fila de espera. \n");
         }
     }
 
-    private static void transportationFromSupplierEvent(Event event) {
-        eventList.remove(event.getEventOccurrency(),event);
+    private  void transportationFromSupplierEvent(Event event) {
+        //eventList.remove(event.getEventOccurrency(),event);
+        eventGenerator(event,envio_para_cliente_de,envio_para_cliente_ate,Event.state.ENVIO_CLIENTE);
+
     }
 
-    private static void arrivalEvent(Event event) {
+    private  void arrivalEvent(Event event) {
         //gera o próximo evento de chegada
         eventGenerator(new Event(),chegada_de,chegada_ate,Event.state.CHEGADA);
 
@@ -222,12 +235,17 @@ public class Main {
 
 
 
-    private static void imprimeRelatorios() {
+    private  void imprimeRelatorios() {
         System.out.println ("\n\n ####################################### \n ");
         System.out.println("Relogio : "+ clock);
         System.out.println("Número de encomendas na fila de espera que ficaram por processar na fila do Armazém  : " + warehouseQueue.getSizeOfQueue());
         System.out.println("Número de encomendas na fila de espera que ficaram por processar na fila das Compras  : " + purchasingQueue.getSizeOfQueue());
-        System.out.println("Número de clientes que estiveram na final de espera : " + numberOfDelays);
+        System.out.println("Ficaram " + eventList.size() + " eventos por processar");
+        System.out.println("Encomendas entregues " + numOfOrdersDelivered + "/" + numOfOrders);
+        System.out.println("Encomendas: " + count_chegada);
+        System.out.println("Enc. stock: " + count_stock);
+        System.out.println("Enc. compra: " + count_compra);
+        System.out.println("Enc. a vir do fornecedor: " + count_transportadora);
 
         System.out.println ("\n ####################################### \n ");
         float mediaEspera = warehouse.getTotaldelay() / warehouse.getNumberOfDelays();
@@ -237,11 +255,11 @@ public class Main {
         roundedMediaEspera = Math.round(mediaEspera * 100.0) / 100.0;
         System.out.println("Tempo médio de espera das compras : " + roundedMediaEspera + " minutos");
 
-        averageTimeToDeliverySinceOrder = timeToDeliverySinceOrder / numOfOrders;
+        averageTimeToDeliverySinceOrder = timeToDeliverySinceOrder / numOfOrdersDelivered;
         System.out.println("Tempo médio de entrega a cliente : " + averageTimeToDeliverySinceOrder + " minutos");
 
-        System.out.println("Média de uso da fila de espera do armazém : " + round(warehouseQueue.getStatistic() / clock));
-        System.out.println("Média de uso da fila de espera das compras : " + round(purchasingQueue.getStatistic() / clock));
+        System.out.println("Média de uso da fila de espera do armazém : " + Math.round(warehouseQueue.getStatistic() / clock));
+        System.out.println("Média de uso da fila de espera das compras : " + Math.round(purchasingQueue.getStatistic() / clock));
 
         float mediaUtilizacaoArmazem = (warehouse.getArea_server_status() / clock) * 100;
         float mediaUtilizacaoCompras = (purchasing.getArea_server_status() / clock) * 100;
@@ -254,11 +272,7 @@ public class Main {
     }
 
 
-    private static void initialization() {
-        //preparationQueue = new ArrayList<>(); // num_in_queue = 0
-        //purchasingQueue = new ArrayList<>(); // num_in_queue = 0
-        //area_num_in_q = 0; // Área de utilização da fila de espera
-        //area_server_status = 0; // Área de utilização do servidor
+    private  void initialization() {
 
         warehouse = new Server(); //server_status = FREE
         warehouseQueue  = new GenericQueue();
@@ -273,19 +287,20 @@ public class Main {
         averageTimeToDeliverySinceOrder = 0;
         timeToDeliverySinceOrder = 0;
         numOfOrders = 0;
+        numOfOrdersDelivered = 0;
 
         eventGenerator(new Event(),chegada_de,chegada_ate,Event.state.CHEGADA);
     }
 
     // Gerador de tempos aleatórios
-    static private float timeGenerator(int from, int to){
+     private float timeGenerator(int from, int to){
         Random rand = new Random();
         //rand.setSeed(50);
         return rand.nextInt(to) + from;
     }
 
     //Gerar com probablidade 70/30 se é uma encomenda de stock para ou para compra
-    static private Event.state nextEventRandomize(){
+     private Event.state nextEventRandomize(){
         Random rand = new Random();
         //rand.setSeed(50);
         int i = rand.nextInt(100) + 1;

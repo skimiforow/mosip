@@ -24,7 +24,7 @@ public class GenericQueue {
     }
 
     public void updateStatistic(){
-        this.areaNumInQueue += this.queue.size()*this.timeOfLastEvent;
+        this.areaNumInQueue += this.getSizeOfQueue()*this.getTimeOfLastEvent();
     }
 
     public float getStatistic(){
@@ -38,4 +38,13 @@ public class GenericQueue {
     public int getSizeOfQueue(){
         return this.queue.size();
     }
+
+    public float getTimeOfLastEvent() {
+        return timeOfLastEvent;
+    }
+
+    public void setTimeOfLastEvent(float timeOfLastEvent) {
+        this.timeOfLastEvent = timeOfLastEvent;
+    }
+
 }
