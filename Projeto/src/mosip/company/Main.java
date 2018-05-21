@@ -27,7 +27,6 @@ public class Main {
 
     //Estatistica
     private static float numberOfDelays;
-    private static float totalDelay;
     private static float timeSinceLastEvent;
     private static float timeLastEvent;
     private static float averageTimeToDeliverySinceOrder;
@@ -85,8 +84,7 @@ public class Main {
 
 
     private static void routine() {
-        Event event = eventList.get(eventList.firstKey());
-
+        Event event = eventList.remove(eventList.firstKey());
         if(eventList.isEmpty ()){
             System.out.println("Gerei evento de chegada de encomenda porque a lista de eventos estava vazia");
             arrivalEvent(new Event());
@@ -143,9 +141,9 @@ public class Main {
         if(state == Event.state.CHEGADA)
             event.getOrder().setArrivalTime(eventOccurringTime - clock);
         event.getOrder().setGlobalArrivalTime(eventOccurringTime);
-        event.setEventOccurrency(event.getOrder().getGlobalArrivalTime());
+        event.setEventOccurrency(eventOccurringTime);
 
-        eventList.put(event.getEventOccurrency(),event);
+        eventList.put(event.getOrder().getGlobalArrivalTime(),event);
     }
 
     private static void orderPreparationEvent(Event event) {
@@ -156,8 +154,8 @@ public class Main {
         } else {
             Event eventFromQueue = warehouseQueue.removeFromQueue();
             System.out.println ("Encomenda removido da fila de espera do armazém.");
-            numberOfDelays++;
-            totalDelay += clock - eventFromQueue.getEventOccurrency();
+            warehouse.addDelay();
+            warehouse.setTotaldelay(warehouse.getTotaldelay()+(clock - eventFromQueue.getEventOccurrency()));
             eventGenerator(eventFromQueue,envio_para_cliente_de,envio_para_cliente_ate,Event.state.ENVIO_CLIENTE);
             System.out.println ("\n O Armazém está a preparar o próximo da fila de espera. \n");
         }
@@ -177,8 +175,8 @@ public class Main {
         } else {
             Event eventFromQueue = purchasingQueue.removeFromQueue();
             System.out.println ("Encomenda removido da fila de espera das compras.");
-            numberOfDelays++;
-            totalDelay += clock - eventFromQueue.getEventOccurrency() ;
+            purchasing.addDelay();
+            purchasing.setTotaldelay(purchasing.getTotaldelay()+(clock - eventFromQueue.getEventOccurrency()));
             eventGenerator(eventFromQueue,transportadora_de,transportadora_ate,Event.state.TRANSPORTADORA);
             System.out.println ("\n As compras estão a comprar o próximo da fila de espera. \n");
         }
@@ -203,7 +201,7 @@ public class Main {
                 } else {
                     System.out.println("Armazém ficou ocupado");
                     warehouse.setState(Server.state.OCUPADO);
-                    numberOfDelays++;
+                    warehouse.addDelay();
                     eventGenerator(event,prep_envio_de,prep_envio_ate,Event.state.PREP_ENVIO);
                 }
             } else {
@@ -216,7 +214,7 @@ public class Main {
                 } else {
                     System.out.println("Compras ficaram ocupadas");
                     purchasing.setState(Server.state.OCUPADO);
-                    numberOfDelays++;
+                    purchasing.addDelay();
                     eventGenerator(event,compra_de,compra_ate,Event.state.COMPRA);
                 }
             }
@@ -232,9 +230,12 @@ public class Main {
         System.out.println("Número de clientes que estiveram na final de espera : " + numberOfDelays);
 
         System.out.println ("\n ####################################### \n ");
-        float mediaEspera = totalDelay / numberOfDelays;
+        float mediaEspera = warehouse.getTotaldelay() / warehouse.getNumberOfDelays();
         double roundedMediaEspera = Math.round(mediaEspera * 100.0) / 100.0;
-        System.out.println("Tempo médio de espera : " + roundedMediaEspera + " minutos");
+        System.out.println("Tempo médio de espera do armazém : " + roundedMediaEspera + " minutos");
+        mediaEspera = purchasing.getTotaldelay() / purchasing.getNumberOfDelays();
+        roundedMediaEspera = Math.round(mediaEspera * 100.0) / 100.0;
+        System.out.println("Tempo médio de espera das compras : " + roundedMediaEspera + " minutos");
 
         averageTimeToDeliverySinceOrder = timeToDeliverySinceOrder / numOfOrders;
         System.out.println("Tempo médio de entrega a cliente : " + averageTimeToDeliverySinceOrder + " minutos");
@@ -269,7 +270,6 @@ public class Main {
         clock = 0; // Incializar relógio da simulação a 0
         timeSinceLastEvent = 0; // // timeLastEvent = 0
         timeLastEvent = 0; // // timeLastEvent = 0
-        totalDelay = 0; // total_delay = 0
         averageTimeToDeliverySinceOrder = 0;
         timeToDeliverySinceOrder = 0;
         numOfOrders = 0;

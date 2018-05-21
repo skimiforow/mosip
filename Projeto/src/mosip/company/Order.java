@@ -27,10 +27,6 @@ public class Order {
         arrivalTime = tempo;
     }
 
-    public void setCutTime(float tempo){
-        endOfEventTime = tempo;
-    }
-
 
     public state getState() {
         return state;
@@ -38,10 +34,6 @@ public class Order {
 
     public float getArrivalTime() {
         return arrivalTime;
-    }
-
-    public float getEndOfEventTime() {
-        return endOfEventTime;
     }
 
     public float getGlobalArrivalTime() {

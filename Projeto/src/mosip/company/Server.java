@@ -4,6 +4,8 @@ public class Server {
 
     private state state;
     private float area_server_status;
+    private float totaldelay;
+    private float numberOfDelays;
 
 
     public enum state {
@@ -13,6 +15,8 @@ public class Server {
     public Server() {
         this.area_server_status = 0;
         this.state = state.LIVRE;
+        this.totaldelay = 0;
+        this.numberOfDelays = 0;
     }
 
     public void setState(state state) {
@@ -33,5 +37,22 @@ public class Server {
     }
     public float getArea_server_status() {
         return area_server_status;
+    }
+
+
+    public float getTotaldelay() {
+        return totaldelay;
+    }
+
+    public void setTotaldelay(float totaldelay) {
+        this.totaldelay = totaldelay;
+    }
+
+    public float getNumberOfDelays() {
+        return numberOfDelays;
+    }
+
+    public void addDelay() {
+        this.numberOfDelays++;
     }
 }
