@@ -35,16 +35,16 @@ public class Main {
     private int count_transportadora;
 
     //Dados de alietoriedade
-    private final  float END_OF_SIMULATION = 2400;
+    private final  float END_OF_SIMULATION = 9600; // Sensívelmente um mês
 
     private final int chegada_de = 1;
-    private final int chegada_ate = 30;
+    private final int chegada_ate = 5;
 
     private final int prep_envio_de = 10;
-    private final int prep_envio_ate = 60;
+    private final int prep_envio_ate = 30;
 
-    private final int compra_de = 10;
-    private final int compra_ate = 30;
+    private final int compra_de = 5;
+    private final int compra_ate = 10;
 
     private final int transportadora_de = 720;
     private final int transportadora_ate = 1240;
