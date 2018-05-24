@@ -34,8 +34,11 @@ public class Main {
 
     //Dados de alietoriedade
     private final  float END_OF_SIMULATION = 9600; // Sensívelmente um mês
+    private static final int NUM_ITERATIONS = 1000; // numero de testes
 
-    private final int chegada_de = 2;
+    private static float[] results;
+
+    private final int chegada_de = 4;
     private final int chegada_ate = 6;
 
     private final int prep_envio_de = 8;
@@ -51,23 +54,52 @@ public class Main {
     private final int envio_para_cliente_ate = 1240;
 
     public static void main(String[] args) {
-        Main m = new Main();
-        m.initialization();
-        while (m.clock < m.END_OF_SIMULATION){
-            m.statisticsUpdate();
-            m.statistics();
-            m.routine();
+        results = new float[12];
+        int percentage = 0;
+
+        for (int run = 0; run < NUM_ITERATIONS; run++) {
+            if (run > 0)
+                percentage = ((run * 100) / NUM_ITERATIONS) + 1;
+            new Main().start();
+
+
+            System.out.println("Completing: " + percentage + "%");
+
         }
-        m.imprimeRelatorios();    }
+        System.out.println();
+        System.out.println("\n ####################################### \n ");
+        System.out.println("Número de encomendas na fila de espera que ficaram por processar na fila do Armazém  : " + results[0] / NUM_ITERATIONS);
+        System.out.println("Número de encomendas na fila de espera que ficaram por processar na fila das Compras  : " + results[1] / NUM_ITERATIONS);
+        System.out.println("Ficaram " + (int) results[2] / NUM_ITERATIONS + " eventos por processar");
+        System.out.println("Encomendas entregues " + (int) results[4] / NUM_ITERATIONS + "/" + (int) results[3] / NUM_ITERATIONS);
+        System.out.println("Tempo médio de espera do armazém : " + (int) results[5] / NUM_ITERATIONS + " minutos");
+        System.out.println("Tempo médio de espera das compras : " + (int) results[6] / NUM_ITERATIONS + " minutos");
+        System.out.println("Tempo médio de entrega a cliente : " + (int) results[7] / NUM_ITERATIONS + " minutos");
+        System.out.println("Média de uso da fila de espera do armazém : " + results[8] / NUM_ITERATIONS);
+        System.out.println("Média de uso da fila de espera das compras : " + results[9] / NUM_ITERATIONS);
+        System.out.println("Média de utilização do servidor Armazém: " + results[10] / NUM_ITERATIONS + " %");
+        System.out.println("Média de utilização do servidor Compras: " + results[11] / NUM_ITERATIONS + " %");
+
+    }
+
+    public void start() {
+        initialization();
+        while (clock < END_OF_SIMULATION) {
+            statisticsUpdate();
+            statistics();
+            routine();
+        }
+        imprimeRelatorios();
+    }
 
     private  void statisticsUpdate() {
         if (!eventList.isEmpty ()) {
             Event event = eventList.get(eventList.firstKey());
-            System.out.println ( "O próximo evento a decorrer é do tipo: " + event.getTipo () );
+            //System.out.println ( "O próximo evento a decorrer é do tipo: " + event.getTipo () );
             clock = event.getEventOccurrency();
-            System.out.println ( "Relógio : " + clock + "\n --------------------------------------- \n \n");
+            //System.out.println ( "Relógio : " + clock + "\n --------------------------------------- \n \n");
         } else {
-            System.out.println ( "A lista de eventos encontra-se vazia!" );
+            //System.out.println ( "A lista de eventos encontra-se vazia!" );
 
         }
     }
@@ -87,28 +119,28 @@ public class Main {
 
     private void routine() {
         if(eventList.isEmpty ()){
-            System.out.println("Gerei evento de chegada de encomenda porque a lista de eventos estava vazia");
+            //System.out.println("Gerei evento de chegada de encomenda porque a lista de eventos estava vazia");
             arrivalEvent(new Event());
         } else {
             Event event = eventList.remove(eventList.firstKey());
             if (event.getTipo() == Event.state.CHEGADA){
-                System.out.println("Gerei evento de chegada de encomenda");
+                //System.out.println("Gerei evento de chegada de encomenda");
                 count_chegada++;
                 arrivalEvent(event);
             } else if (event.getTipo() == Event.state.PREP_ENVIO){
-                System.out.println("Gerei evento de stock para preparação de envio");
+                //System.out.println("Gerei evento de stock para preparação de envio");
                 count_stock++;
                 orderPreparationEvent(event);
             } else if (event.getTipo() == Event.state.COMPRA){
-                System.out.println("Gerei evento de compra");
+                //System.out.println("Gerei evento de compra");
                 count_compra++;
                 orderPurchaseEvent(event);
             } else if (event.getTipo() == Event.state.TRANSPORTADORA){
-                System.out.println("Gerei evento de transporte de fornecedor");
+                //System.out.println("Gerei evento de transporte de fornecedor");
                 count_transportadora++;
                 transportationFromSupplierEvent(event);
             } else if (event.getTipo() == Event.state.ENVIO_CLIENTE){
-                System.out.println("Gerei evento de Chegada");
+                //System.out.println("Gerei evento de Chegada");
                 shipmentToClientEvent(event);
             }
         }
@@ -143,7 +175,7 @@ public class Main {
             if (!eventList.containsKey ( eventOccurringTime )) {
                 break;
             }
-            eventOccurringTime += 1f;
+            eventOccurringTime += 0.1f;
         }
         if(state == Event.state.CHEGADA)
             event.getOrder().setArrivalTime(eventOccurringTime - clock);
@@ -160,15 +192,15 @@ public class Main {
         if (warehouseQueue.isEmpty()){
             warehouse.setState(Server.state.LIVRE);
             eventGenerator(event,envio_para_cliente_de,envio_para_cliente_ate,Event.state.ENVIO_CLIENTE);
-            System.out.println ("\n Armazém ficou livre! \n");
+            //System.out.println ("\n Armazém ficou livre! \n");
         } else {
             Event eventFromQueue = warehouseQueue.removeFromQueue();
-            System.out.println ("Encomenda removido da fila de espera do armazém.");
+            //System.out.println ("Encomenda removido da fila de espera do armazém.");
             warehouse.addDelay();
             warehouse.setTotaldelay(warehouse.getTotaldelay()+(clock - eventFromQueue.getEventOccurrency()));
             eventGenerator(event,prep_envio_de,prep_envio_ate,Event.state.PREP_ENVIO);
             eventGenerator(eventFromQueue,envio_para_cliente_de,envio_para_cliente_ate,Event.state.ENVIO_CLIENTE);
-            System.out.println ("\n O Armazém está a preparar o próximo da fila de espera. \n");
+            //System.out.println ("\n O Armazém está a preparar o próximo da fila de espera. \n");
         }
     }
 
@@ -182,15 +214,15 @@ public class Main {
         if (purchasingQueue.isEmpty()){
             purchasing.setState(Server.state.LIVRE);
             eventGenerator(event,transportadora_de,transportadora_ate,Event.state.TRANSPORTADORA);
-            System.out.println ("\n Compras ficou livre! \n");
+            //System.out.println ("\n Compras ficou livre! \n");
         } else {
             Event eventFromQueue = purchasingQueue.removeFromQueue();
-            System.out.println ("Encomenda removido da fila de espera das compras.");
+            //System.out.println ("Encomenda removido da fila de espera das compras.");
             purchasing.addDelay();
             purchasing.setTotaldelay(purchasing.getTotaldelay()+(clock - eventFromQueue.getEventOccurrency()));
             eventGenerator(event,compra_de,compra_ate,Event.state.COMPRA);
             eventGenerator(eventFromQueue,transportadora_de,transportadora_ate,Event.state.TRANSPORTADORA);
-            System.out.println ("\n As compras estão a comprar o próximo da fila de espera. \n");
+            //System.out.println ("\n As compras estão a comprar o próximo da fila de espera. \n");
         }
     }
 
@@ -206,27 +238,27 @@ public class Main {
 
         Event.state state = nextEventRandomize();
             if (state == Event.state.PREP_ENVIO){
-                System.out.println("Gerei encomenda de stock, para preparação de envio");
+                //System.out.println("Gerei encomenda de stock, para preparação de envio");
 
                 if(warehouse.getState() == Server.state.OCUPADO){
-                    System.out.println("Encomenda adicionada à lista de espera do armazém");
+                    //System.out.println("Encomenda adicionada à lista de espera do armazém");
                     event.getOrder().setArrivalTime(clock);
                     warehouseQueue.addToQueue(event);
                 } else {
-                    System.out.println("Armazém ficou ocupado");
+                    //System.out.println("Armazém ficou ocupado");
                     warehouse.setState(Server.state.OCUPADO);
                     warehouse.addDelay();
                     eventGenerator(event,prep_envio_de,prep_envio_ate,Event.state.PREP_ENVIO);
                 }
             } else {
-                System.out.println("Gerei evento para encomenda a fornecedor");
+                //System.out.println("Gerei evento para encomenda a fornecedor");
 
                 if(purchasing.getState() == Server.state.OCUPADO){
-                    System.out.println("Encomenda adicionada à lista de espera das compras");
+                    //System.out.println("Encomenda adicionada à lista de espera das compras");
                     event.getOrder().setArrivalTime(clock);
                     purchasingQueue.addToQueue(event);
                 } else {
-                    System.out.println("Compras ficaram ocupadas");
+                    // System.out.println("Compras ficaram ocupadas");
                     purchasing.setState(Server.state.OCUPADO);
                     purchasing.addDelay();
                     eventGenerator(event,compra_de,compra_ate,Event.state.COMPRA);
@@ -237,38 +269,57 @@ public class Main {
 
 
     private  void imprimeRelatorios() {
-        System.out.println ("\n\n ####################################### \n ");
-        System.out.println("Relogio : "+ clock);
-        System.out.println("Número de encomendas na fila de espera que ficaram por processar na fila do Armazém  : " + warehouseQueue.getSizeOfQueue());
-        System.out.println("Número de encomendas na fila de espera que ficaram por processar na fila das Compras  : " + purchasingQueue.getSizeOfQueue());
-        System.out.println("Ficaram " + eventList.size() + " eventos por processar");
-        System.out.println("Encomendas entregues " + numOfOrdersDelivered + "/" + numOfOrders);
+        //System.out.println ("\n\n ####################################### \n ");
+        //System.out.println("Relógio : "+ clock);
+        //System.out.println("Número de encomendas na fila de espera que ficaram por processar na fila do Armazém  : " + warehouseQueue.getSizeOfQueue());
+        results[0] += warehouseQueue.getSizeOfQueue();
+        //System.out.println("Número de encomendas na fila de espera que ficaram por processar na fila das Compras  : " + purchasingQueue.getSizeOfQueue());
+        results[1] += warehouseQueue.getSizeOfQueue();
+
+        //System.out.println("Ficaram " + eventList.size() + " eventos por processar");
+        results[2] += eventList.size();
+
+        //System.out.println("Encomendas entregues " + numOfOrdersDelivered + "/" + numOfOrders);
+        results[3] += numOfOrders;
+        results[4] += numOfOrdersDelivered;
+
         //System.out.println("Encomendas: " + count_chegada);
         //System.out.println("Enc. stock: " + count_stock);
         //System.out.println("Enc. compra: " + count_compra);
         //System.out.println("Enc. a vir do fornecedor: " + count_transportadora);
 
-        System.out.println ("\n ####################################### \n ");
+        //System.out.println ("\n ####################################### \n ");
         float mediaEspera = warehouse.getTotaldelay() / warehouse.getNumberOfDelays();
-        double roundedMediaEspera = Math.round(mediaEspera * 100.0) / 100.0;
-        System.out.println("Tempo médio de espera do armazém : " + roundedMediaEspera + " minutos");
+        float roundedMediaEspera = (float) (Math.round(mediaEspera * 100.0) / 100.0);
+        //System.out.println("Tempo médio de espera do armazém : " + roundedMediaEspera + " minutos");
+        results[5] += roundedMediaEspera;
+
         mediaEspera = purchasing.getTotaldelay() / purchasing.getNumberOfDelays();
-        roundedMediaEspera = Math.round(mediaEspera * 100.0) / 100.0;
-        System.out.println("Tempo médio de espera das compras : " + roundedMediaEspera + " minutos");
+        roundedMediaEspera = (float) ((float) Math.round(mediaEspera * 100.0) / 100.0);
+        //System.out.println("Tempo médio de espera das compras : " + roundedMediaEspera + " minutos");
+        results[6] += roundedMediaEspera;
 
         averageTimeToDeliverySinceOrder = timeToDeliverySinceOrder / numOfOrdersDelivered;
-        System.out.println("Tempo médio de entrega a cliente : " + averageTimeToDeliverySinceOrder + " minutos");
+        //System.out.println("Tempo médio de entrega a cliente : " + averageTimeToDeliverySinceOrder + " minutos");
+        results[7] += averageTimeToDeliverySinceOrder;
 
-        System.out.println("Média de uso da fila de espera do armazém : " + Math.round(warehouseQueue.getStatistic() / clock));
-        System.out.println("Média de uso da fila de espera das compras : " + Math.round(purchasingQueue.getStatistic() / clock));
+        //System.out.println("Média de uso da fila de espera do armazém : " + Math.round(warehouseQueue.getStatistic() / clock));
+        results[8] += Math.round(warehouseQueue.getStatistic() / clock);
+
+        //System.out.println("Média de uso da fila de espera das compras : " + Math.round(purchasingQueue.getStatistic() / clock));
+        results[9] += Math.round(purchasingQueue.getStatistic() / clock);
 
         float mediaUtilizacaoArmazem = (warehouse.getArea_server_status() / clock) * 100;
         float mediaUtilizacaoCompras = (purchasing.getArea_server_status() / clock) * 100;
-        double roundedMediaUtilizacaoServerArmazem = Math.round(mediaUtilizacaoArmazem * 100.0) / 100.0;
-        double roundedMediaUtilizacaoServerCompras = Math.round(mediaUtilizacaoCompras * 100.0) / 100.0;
-        System.out.println("Média de utilização do servidor Armazém: " + roundedMediaUtilizacaoServerArmazem + " %");
-        System.out.println("Média de utilização do servidor Compras: " + roundedMediaUtilizacaoServerCompras + " %");
-        System.out.println ("\n ####################################### \n \n");
+        float roundedMediaUtilizacaoServerArmazem = (float) (Math.round(mediaUtilizacaoArmazem * 100.0) / 100.0);
+        float roundedMediaUtilizacaoServerCompras = (float) (Math.round(mediaUtilizacaoCompras * 100.0) / 100.0);
+        //System.out.println("Média de utilização do servidor Armazém: " + roundedMediaUtilizacaoServerArmazem + " %");
+        results[10] += roundedMediaUtilizacaoServerArmazem;
+
+        //System.out.println("Média de utilização do servidor Compras: " + roundedMediaUtilizacaoServerCompras + " %");
+        results[11] += roundedMediaUtilizacaoServerCompras;
+
+        //System.out.println ("\n ####################################### \n \n");
 
     }
 
