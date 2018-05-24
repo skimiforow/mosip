@@ -3,8 +3,6 @@ package mosip.company;
 import java.util.Random;
 import java.util.TreeMap;
 
-import java.lang.Math.*;
-
 public class Main {
 
     private  float clock;
@@ -37,14 +35,14 @@ public class Main {
     //Dados de alietoriedade
     private final  float END_OF_SIMULATION = 9600; // Sensívelmente um mês
 
-    private final int chegada_de = 1;
-    private final int chegada_ate = 5;
+    private final int chegada_de = 2;
+    private final int chegada_ate = 6;
 
-    private final int prep_envio_de = 10;
-    private final int prep_envio_ate = 30;
+    private final int prep_envio_de = 8;
+    private final int prep_envio_ate = 12; // uma encomenda demora entre 30 a 60 minutos a processar, visto que são 4 pessoas no armazém dividi os valores por 4
 
-    private final int compra_de = 5;
-    private final int compra_ate = 10;
+    private final int compra_de = 4;
+    private final int compra_ate = 8; // uma compra demora entre 10 a 20 minutos a processar, visto que são 2 pessoas a processar encomendas divido o tempo a metade.
 
     private final int transportadora_de = 720;
     private final int transportadora_ate = 1240;
@@ -155,6 +153,9 @@ public class Main {
         eventList.put(event.getOrder().getGlobalArrivalTime(),event);
     }
 
+    /**
+     * @param event O Objeto evento a decorrer
+     */
     private void orderPreparationEvent(Event event) {
         if (warehouseQueue.isEmpty()){
             warehouse.setState(Server.state.LIVRE);
@@ -242,10 +243,10 @@ public class Main {
         System.out.println("Número de encomendas na fila de espera que ficaram por processar na fila das Compras  : " + purchasingQueue.getSizeOfQueue());
         System.out.println("Ficaram " + eventList.size() + " eventos por processar");
         System.out.println("Encomendas entregues " + numOfOrdersDelivered + "/" + numOfOrders);
-        System.out.println("Encomendas: " + count_chegada);
-        System.out.println("Enc. stock: " + count_stock);
-        System.out.println("Enc. compra: " + count_compra);
-        System.out.println("Enc. a vir do fornecedor: " + count_transportadora);
+        //System.out.println("Encomendas: " + count_chegada);
+        //System.out.println("Enc. stock: " + count_stock);
+        //System.out.println("Enc. compra: " + count_compra);
+        //System.out.println("Enc. a vir do fornecedor: " + count_transportadora);
 
         System.out.println ("\n ####################################### \n ");
         float mediaEspera = warehouse.getTotaldelay() / warehouse.getNumberOfDelays();
